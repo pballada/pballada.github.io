@@ -21,11 +21,12 @@
 title: Pau Ballada
 email: xxx
 description: >- # this means to ignore newlines until "baseurl:"
-  I'm a Senior iOS Developer from Barcelona
+  Crafting iOS apps since iOS SDK 1.0 
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: pballada
 github_username:  pballada
+author: Pau Ballada
 
 # Build settings
 theme: minima
