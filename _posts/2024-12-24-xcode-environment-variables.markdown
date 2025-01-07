@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "The Ultimate Guide to Xcode Environment Variables"
-date: 2024-12-22
+date: 2024-10-22
 categories: [Xcode, iOSDevelopment]
 ---
 

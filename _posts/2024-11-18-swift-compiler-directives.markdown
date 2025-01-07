@@ -2,7 +2,7 @@
 ---
 layout: post
 title: "All About Swift Compiler Directives"
-date: 2024-12-20 11:00:00 +0000
+date: 2024-11-20 11:00:00 +0000
 categories: [Swift, iOS, Xcode, Compiler Directives]
 ---
 
