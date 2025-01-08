@@ -5,8 +5,6 @@ date: 2024-02-10 09:00:00 +0000
 categories: [Swift, Concurrency]
 ---
 
-# Swift Concurrency: An Intro to Async/Await
-
 Swift Concurrency is more than just a new language feature—it’s part of a broader effort to simplify how we work with asynchronous code. Before `async/await`, many iOS developers used completion handlers, delegation patterns, or even Combine to manage tasks running in the background. While these older techniques still work, they can lead to tangled code if you’re juggling multiple tasks simultaneously.
 
 In this post, we’ll look at why Swift Concurrency matters, how `async/await` compares to older approaches, and a few considerations to keep in mind as you incorporate this feature into your projects.

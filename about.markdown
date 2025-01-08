@@ -1,18 +1,23 @@
 ---
 layout: page
-title: About
+title: 👋 Hey there! 
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+# I'm Pau Ballada.
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+🚀 Passionate iOS Developer crafting sleek and seamless apps for Apple enthusiasts. With 15+ years of experience in Swift and UIKit, I've turned countless ideas into reality on the App Store. When I'm not coding, you'll find me exploring the latest tech trends or hiking trails. Let’s build something awesome together! 🍎✨
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
+## 🛠️ Tech Stack
+- **Languages:** Swift, Objective-C
+- **Frameworks:** UIKit, SwiftUI, CoreData
+- **Tools:** Xcode, Git, Fastlane, Firebase
 
+<!--
+## 🌟 Featured Projects
+- [**App One**](https://github.com/yourusername/app-one) – A [brief description]
+- [**App Two**](https://github.com/yourusername/app-two) – A [brief description]
+-->
 
-[jekyll-organization]: https://github.com/jekyll
+📫 **Get in touch:** [LinkedIn](https://linkedin.com/in/pballada)
+

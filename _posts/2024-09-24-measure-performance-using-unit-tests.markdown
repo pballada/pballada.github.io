@@ -5,8 +5,6 @@ date: 2025-01-07
 categories: [iOS, Testing, Performance]
 ---
 
-# Measuring Performance in iOS Apps with Unit Tests
-
 When working on iOS applications, ensuring your app remains efficient and responsive is just as important as implementing new features. One of the most straightforward ways to keep an eye on performance is by leveraging Unit Tests. While these tests are typically focused on functionality, you can also write specialized tests to measure resource consumption and speed.
 
 Below, I'll share a few key techniques and code examples on how to measure performance using Xcode’s built-in testing framework, along with a handful of tips.

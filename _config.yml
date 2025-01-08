@@ -18,15 +18,17 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Pau Ballada
-email: xxx
+title: My iOS Development Blog
+#email: xxx
 description: >- # this means to ignore newlines until "baseurl:"
   Crafting iOS apps since iOS SDK 1.0 
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
-twitter_username: pballada
+url: https://www.pauballada.com
+#twitter_username: pballada
 github_username:  pballada
 author: Pau Ballada
+
+show_excerpts: true
 
 # Build settings
 theme: minima
