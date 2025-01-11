@@ -1,0 +1,6 @@
+
+hr {
+  border: none;
+  border-top: 1px solid #ddd !important; /* light gray */
+  margin: 3rem 0 2rem 0;
+}
