@@ -30,6 +30,8 @@ author: Pau Ballada
 
 show_excerpts: true
 
+google_analytics: G-Z5EE305RXY
+
 # Build settings
 theme: minima
 plugins:
