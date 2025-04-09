@@ -1,32 +1,33 @@
 ---
 layout: post
-title: "Measuring Performance in iOS Apps with Unit Tests"
-date: 2025-01-07
-categories: [iOS, Testing, Performance]
+title: "Measuring Performance Using XCTest"
+date: 2024-09-24
+categories: [Testing, Performance]
+header_image: /assets/images/coding.jpg
 ---
 
 When working on iOS applications, ensuring your app remains efficient and responsive is just as important as implementing new features. One of the most straightforward ways to keep an eye on performance is by leveraging Unit Tests. While these tests are typically focused on functionality, you can also write specialized tests to measure resource consumption and speed.
 
-Below, I'll share a few key techniques and code examples on how to measure performance using Xcode’s built-in testing framework, along with a handful of tips.
+Below, I'll share a few key techniques and code examples on how to measure performance using Xcode's built-in testing framework, along with a handful of tips.
 
 ---
 
 ## Why Use Unit Tests for Performance?
 
 1. **Immediate Feedback**  
-   Performance tests quickly alert you to potential regressions. If you introduce a method that increases load times or memory usage, you’ll see a spike in your performance metrics right away.
+   Performance tests quickly alert you to potential regressions. If you introduce a method that increases load times or memory usage, you'll see a spike in your performance metrics right away.
 
 2. **Consistent Environment**  
    Unit tests run in a controlled environment. Although real-world conditions vary, testing within a stable setting helps identify the raw performance impact of your code.
 
 3. **Automation**  
-   You can integrate performance tests into your CI pipeline, ensuring your app’s speed and responsiveness aren’t compromised as the codebase grows.
+   You can integrate performance tests into your CI pipeline, ensuring your app's speed and responsiveness aren't compromised as the codebase grows.
 
 ---
 
 ## Setting Up a Performance Test
 
-Apple provides a convenient API in the `XCTest` framework to measure performance: `measure { ... }`. Here’s a straightforward example:
+Apple provides a convenient API in the `XCTest` framework to measure performance: `measure { ... }`. Here's a straightforward example:
 
 ```swift
 import XCTest
@@ -60,7 +61,7 @@ class SortingPerformanceTests: XCTestCase {
 
 ## Monitoring Advanced Metrics
 
-Beyond simple time measurements, you can also use the new `measure(metrics: [XCTMetric], block: ...)` API in Xcode. Here’s a quick demonstration using `XCTClockMetric` and `XCTCPUMetric`:
+Beyond simple time measurements, you can also use the new `measure(metrics: [XCTMetric], block: ...)` API in Xcode. Here's a quick demonstration using `XCTClockMetric` and `XCTCPUMetric`:
 
 ```swift
 import XCTest
@@ -91,7 +92,7 @@ class AdvancedPerformanceTests: XCTestCase {
 
 ### Tips
 
-- **Combine Multiple Metrics**: It’s often helpful to see CPU usage alongside wall clock time. High CPU usage could indicate a potential bottleneck elsewhere.  
+- **Combine Multiple Metrics**: It's often helpful to see CPU usage alongside wall clock time. High CPU usage could indicate a potential bottleneck elsewhere.  
 - **Run Multiple Iterations**: Xcode will run the `measure` block multiple times by default, generating averaged results. You can also tweak how many iterations are performed if needed.
 
 ---
@@ -108,7 +109,7 @@ class AdvancedPerformanceTests: XCTestCase {
    Set a baseline for how long a function should take. Xcode can flag your performance test if it exceeds this threshold in future runs.
 
 4. **Regularly Review**  
-   Don’t let performance tests go stale. Review results regularly to catch any negative trends in your app’s performance.
+   Don't let performance tests go stale. Review results regularly to catch any negative trends in your app's performance.
 
 ---
 
@@ -116,4 +117,4 @@ class AdvancedPerformanceTests: XCTestCase {
 
 While functional tests ensure that your code behaves correctly, adding performance tests to your suite helps maintain a smooth user experience. By systematically measuring runtimes, CPU usage, and other metrics, you can quickly spot regressions and prevent performance pitfalls before they reach users. 
 
-Building these checks into your continuous integration pipeline can pay off significantly over time. If you have any additional thoughts or tips about testing performance, feel free to share—there’s always more to explore in the pursuit of seamless iOS experiences.
+Building these checks into your continuous integration pipeline can pay off significantly over time. If you have any additional thoughts or tips about testing performance, feel free to share—there's always more to explore in the pursuit of seamless iOS experiences.
