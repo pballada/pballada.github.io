@@ -1,376 +1,261 @@
 ---
 layout: post
-title: "Moving Away from Combine: Embracing Swift Concurrency"
+title: "Understanding Swift Concurrency: AsyncQueue, AsyncStream, and AsyncSequence"
 date: 2025-02-01
 categories: [iOS, Swift]
 header_image: /assets/images/swift-concurrency.jpg
 ---
 
-Over the past year, I’ve been migrating away from Combine and fully embracing Swift Concurrency across production codebases. Combine was powerful and expressive—but it also introduced complexity, cryptic error messages, and steep onboarding costs for junior developers. Swift Concurrency, on the other hand, feels like Swift finally becoming what it was meant to be: a language with built-in, ergonomic, and native async capabilities.
+Concurrency in Swift has come a long way. If you’ve been working in iOS for more than a couple of years, you’ve probably felt the pain of juggling `DispatchQueue`, `OperationQueue`, semaphores, or worse—nested completion handlers tangled into callback hell.
 
-This post is a deep dive into real-world Combine patterns and how I’ve translated them to modern Swift Concurrency. This isn't just surface-level—it's about bringing clarity and long-term maintainability to async workflows.
+Structured concurrency, introduced in Swift 5.5, changed the game. With `async/await`, `Task`, and `actors`, our code became more readable and maintainable. But there are more advanced tools that deserve attention—particularly when you’re dealing with event streams, background queues, or building asynchronous APIs from scratch.
 
----
-
-## Why Replace Combine?
-
-Combine helped bridge the async gap before Swift had built-in tools to do it. But Combine:
-
-- Is difficult to debug  
-- Requires verbose type erasure  
-- Relies heavily on chains of cryptic operators  
-- Encourages overengineering for simple workflows  
-
-Swift Concurrency, on the other hand:
-
-- Is native to the language  
-- Reads top-to-bottom  
-- Encourages structured thinking  
-- Has better tooling and diagnostics  
-
-Let’s explore what that looks like in real-world code.
+In this post, I’ll unpack three such tools: `AsyncQueue`, `AsyncStream`, and `AsyncSequence`. These are not just syntactic sugar—they allow us to build clean, robust, and testable async flows in Swift.
 
 ---
 
-## 1. Standard Networking Request
+## 🔁 AsyncQueue: Ordered Execution in an Async World
 
-### 🧱 Combine
+### What is AsyncQueue?
 
-```swift
-func fetchItems() -> AnyPublisher<[Item], Error> {
-    URLSession.shared.dataTaskPublisher(for: url)
-        .map(\.data)
-        .decode(type: [Item].self, decoder: JSONDecoder())
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
-}
-```
+`AsyncQueue` is a concurrency pattern that ensures async tasks are executed **serially**—in order—even though they’re defined using Swift’s structured concurrency tools.
 
-This chain performs a network request, decodes the data, switches to the main thread, and erases the publisher type. It’s concise but hard to debug, especially if the pipeline gets longer or you need intermediate breakpoints.
+This pattern is not part of the standard library but can be implemented easily using `Task` and `actor`. Think of it as an `OperationQueue` where each operation is an `async` closure, and operations are executed one after another.
 
-### 🔁 Swift Concurrency
+### Why Use AsyncQueue?
 
-```swift
-func fetchItems() async throws -> [Item] {
-    let (data, _) = try await URLSession.shared.data(from: url)
-    return try JSONDecoder().decode([Item].self, from: data)
-}
-```
+Let’s say you need to:
 
-✅ **Why this is better**:  
-- Straight-line code mirrors the logic exactly.  
-- Easier to debug and catch decode errors.  
-- No need to jump between `.map`, `.decode`, `.receive`, etc.  
+- Process user events in order (e.g., keyboard input, game moves)
+- Save user data one chunk at a time
+- Sequentially animate UI elements
+- Avoid race conditions without locking
 
----
+A typical GCD serial queue could work, but using `Task` and `actor` makes the solution more idiomatic and testable in modern Swift.
 
-## 2. Retrying on Failure
-
-### 🧱 Combine
+### Implementation
 
 ```swift
-somePublisher
-    .retry(3)
-    .sink(receiveCompletion: {...}, receiveValue: {...})
-    .store(in: &cancellables)
-```
+actor AsyncQueue {
+    private var lastTask: Task<Void, Never>?
 
-### 🔁 Swift Concurrency
-
-```swift
-func fetchWithRetry<T>(_ operation: @escaping () async throws -> T, retries: Int = 3) async throws -> T {
-    var attempts = 0
-    while true {
-        do {
-            return try await operation()
-        } catch {
-            attempts += 1
-            if attempts >= retries { throw error }
-            try await Task.sleep(nanoseconds: 500_000_000)
+    func enqueue(_ operation: @escaping () async -> Void) {
+        let previousTask = lastTask
+        lastTask = Task {
+            await previousTask?.value
+            await operation()
         }
     }
-}
-```
 
-✅ **Why this is better**:  
-- You control retry logic, backoff timing, and error filtering.  
-- Works with `try await` operations directly.  
-
----
-
-## 3. Combining Multiple Values (`combineLatest`)
-
-### 🧱 Combine
-
-```swift
-Publishers.CombineLatest($email, $password)
-    .map { !$0.isEmpty && !$1.isEmpty }
-    .assign(to: &$isLoginEnabled)
-```
-
-### 🔁 Swift Concurrency
-
-```swift
-@Observable class LoginViewModel {
-    var email: String = ""
-    var password: String = ""
-    var isLoginEnabled: Bool {
-        !email.isEmpty && !password.isEmpty
+    func cancelAll() {
+        lastTask?.cancel()
+        lastTask = nil
     }
 }
 ```
 
-✅ **Why this is better**:  
-- Swift Concurrency integrates deeply into `@Observable` in SwiftUI.  
-- You get dependency-tracked recomputation without subscriptions.  
+### Example: Saving Files in Order
+
+```swift
+let fileQueue = AsyncQueue()
+
+func saveFile(named name: String, data: Data) {
+    fileQueue.enqueue {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+        try? data.write(to: url)
+        print("Saved file: \(name)")
+    }
+}
+
+saveFile(named: "a.txt", data: Data("Hello".utf8))
+saveFile(named: "b.txt", data: Data("World".utf8))
+```
+
+Each `saveFile` call is async, but they are guaranteed to run in the order they were enqueued.
 
 ---
 
-## 4. Merging Multiple Streams
+## 🌊 AsyncStream: Observing Asynchronous Events
 
-### 🧱 Combine
+### What is AsyncStream?
+
+`AsyncStream` is a **bridge** between the old world (delegates, notifications, and callbacks) and the new world of `async/await`. It lets you create an asynchronous sequence of values that can be iterated over using `for await`.
+
+It’s particularly useful when:
+
+- Wrapping callback-based APIs
+- Observing system notifications or events
+- Handling user input streams
+- Consuming WebSocket messages
+
+### Basic Example: Wrapping a Timer
 
 ```swift
-publisherA.merge(with: publisherB)
-```
-
-### 🔁 Swift Concurrency
-
-```swift
-func merge<T>(_ streams: [AsyncStream<T>]) -> AsyncStream<T> {
+func makeTimerStream(interval: TimeInterval) -> AsyncStream<Date> {
     AsyncStream { continuation in
-        for stream in streams {
-            Task {
-                for await value in stream {
-                    continuation.yield(value)
-                }
-            }
+        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+            continuation.yield(Date())
+        }
+
+        continuation.onTermination = { @Sendable _ in
+            timer.invalidate()
         }
     }
 }
 ```
 
-✅ **Why this is better**:  
-- True concurrent emission.  
-- You can customize timing, priority, or filtering.  
-
----
-
-## 5. Periodic Polling
-
-### 🧱 Combine
+### Using the Stream
 
 ```swift
-Timer.publish(every: 10, on: .main, in: .common)
-    .autoconnect()
-    .flatMap { _ in self.fetchStatus() }
-    .sink { self.status = $0 }
-```
-
-### 🔁 Swift Concurrency
-
-```swift
-func startPolling() {
-    Task {
-        while !Task.isCancelled {
-            do {
-                let result = try await fetchStatus()
-                await MainActor.run {
-                    self.status = result
-                }
-            } catch {
-                print("Polling failed: \(error)")
-            }
-            try await Task.sleep(nanoseconds: 10_000_000_000)
-        }
-    }
+for await tick in makeTimerStream(interval: 1.0) {
+    print("Tick: \(tick)")
 }
 ```
 
-✅ **Why this is better**:  
-- Lifecycle-aware with cancelation built-in.  
-- Clear and testable logic.  
+This is more readable and maintainable than any delegate-based approach or closure chain.
 
----
-
-## 6. Form Validation
-
-### 🧱 Combine
+### Example: Bridging NotificationCenter
 
 ```swift
-Publishers.CombineLatest3($name, $email, $password)
-    .map { ... }
-    .assign(to: &$isValid)
-```
-
-### 🔁 Swift Concurrency
-
-```swift
-@Observable class FormViewModel {
-    var name = ""
-    var email = ""
-    var password = ""
-
-    var isValid: Bool {
-        !name.isEmpty && email.contains("@") && password.count > 5
-    }
-}
-```
-
-✅ **Why this is better**:  
-- You don’t need to manage subscriptions for validation.  
-- The logic is co-located and declarative.  
-
----
-
-## 7. Bridging Combine to Concurrency (and Back)
-
-### Combine → AsyncSequence
-
-```swift
-for await value in somePublisher.values {
-    print("Received \(value)")
-}
-```
-
-### Swift Concurrency → Publisher
-
-```swift
-func asyncToPublisher<T>(_ operation: @escaping () async throws -> T) -> AnyPublisher<T, Error> {
-    Deferred {
-        Future { promise in
-            Task {
-                do {
-                    let result = try await operation()
-                    promise(.success(result))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        }
-    }.eraseToAnyPublisher()
-}
-```
-
-✅ **Why this is better**:  
-- Enables smooth, piecemeal migration from Combine.  
-- Keeps interop alive for SDKs and older code.  
-
----
-
-## 8. Debounce with Swift Concurrency
-
-### 🧱 Combine
-
-```swift
-$text
-    .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
-    .removeDuplicates()
-    .sink { self.search($0) }
-```
-
-### 🔁 Swift Concurrency
-
-```swift
-func debounce<Input: Equatable>(
-    for interval: TimeInterval,
-    in stream: AsyncStream<Input>
-) -> AsyncStream<Input> {
+func observeKeyboardNotifications() -> AsyncStream<Notification> {
     AsyncStream { continuation in
-        var lastValue: Input?
-        var debounceTask: Task<Void, Never>?
-
-        Task {
-            for await value in stream {
-                if value == lastValue { continue }
-                lastValue = value
-
-                debounceTask?.cancel()
-                debounceTask = Task {
-                    try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
-                    continuation.yield(value)
-                }
-            }
+        let observer = NotificationCenter.default.addObserver(
+            forName: UIResponder.keyboardWillShowNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            continuation.yield(notification)
         }
 
         continuation.onTermination = { _ in
-            debounceTask?.cancel()
+            NotificationCenter.default.removeObserver(observer)
         }
+    }
+}
+
+Task {
+    for await notification in observeKeyboardNotifications() {
+        print("Keyboard will show: \(notification)")
     }
 }
 ```
 
-✅ **Why this is better**:  
-- Full control over debouncing behavior.  
-- Easily reused across different types and contexts.  
+No more dealing with observer tokens or forgetting to unregister.
 
 ---
 
-## 9. Throttle with Swift Concurrency
+## 📜 AsyncSequence: Build Your Own Streams
 
-### 🧱 Combine
+### What is AsyncSequence?
+
+`AsyncSequence` is the asynchronous equivalent of `Sequence`. It’s a protocol you conform to when you want to produce values *over time*, possibly involving suspensions.
+
+It’s a low-level building block for things like:
+
+- Custom data pipelines
+- Throttled or debounced inputs
+- Reading from a socket or file line-by-line
+- Controlling backpressure and retries
+
+### Anatomy of an AsyncSequence
+
+To conform to `AsyncSequence`, you provide a type that returns an `AsyncIterator`. This iterator conforms to `AsyncIteratorProtocol`, which defines a `next()` async method.
+
+### Custom Example: Debounced Input
 
 ```swift
-$scrollOffset
-    .throttle(for: .milliseconds(200), scheduler: RunLoop.main, latest: true)
-    .sink { self.update($0) }
-```
+struct DebouncedInput: AsyncSequence {
+    typealias Element = String
 
-### 🔁 Swift Concurrency
+    let inputs: [String]
+    let interval: TimeInterval
 
-```swift
-func throttle<T>(
-    for interval: TimeInterval,
-    in stream: AsyncStream<T>
-) -> AsyncStream<T> {
-    AsyncStream { continuation in
-        var lastEmission = Date.distantPast
+    struct Iterator: AsyncIteratorProtocol {
+        var inputs: [String]
+        let interval: TimeInterval
 
-        Task {
-            for await value in stream {
-                let now = Date()
-                let elapsed = now.timeIntervalSince(lastEmission)
-
-                if elapsed >= interval {
-                    continuation.yield(value)
-                    lastEmission = now
-                }
-            }
+        mutating func next() async -> String? {
+            guard !inputs.isEmpty else { return nil }
+            try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+            return inputs.removeFirst()
         }
+    }
+
+    func makeAsyncIterator() -> Iterator {
+        Iterator(inputs: inputs, interval: interval)
     }
 }
 ```
 
-✅ **Why this is better**:  
-- Adjust logic per use case (leading vs trailing, skipping vs queueing).  
-- Easier to integrate with animation cycles or performance goals.  
+### Usage
+
+```swift
+let searchTerms = DebouncedInput(inputs: ["S", "Sw", "Swi", "Swif", "Swift"], interval: 0.5)
+
+for await term in searchTerms {
+    print("Searching for: \(term)")
+}
+```
+
+Perfect for building custom debounced or throttled inputs, such as for a search bar.
 
 ---
 
-## General Comparison
+## 🧠 When to Use What?
 
-| Goal                        | Combine                           | Swift Concurrency             |
-|-----------------------------|-----------------------------------|-------------------------------|
-| Async logic                 | Declarative pipeline               | Structured flow               |
-| Retry logic                 | Limited operator config            | Fully customizable            |
-| Debounce / Throttle         | Built-in                          | Easily built + tunable        |
-| CombineLatest / Zip         | Complex setup                     | Often unnecessary             |
-| Cancellation                | Manual (`AnyCancellable`)         | Built-in (`Task`)             |
-| Debuggability               | Poor stack traces                 | Native and understandable     |
-| SwiftUI compatibility       | Yes, but bolted-on                | Designed for it               |
+| Tool         | Best For                                                                 |
+|--------------|--------------------------------------------------------------------------|
+| `AsyncQueue` | Ensuring async tasks run **in order**, one at a time                     |
+| `AsyncStream`| Bridging old-world callbacks or notifications into structured async flows|
+| `AsyncSequence`| Building reusable async iterators with custom logic and flow control  |
 
 ---
 
-## Final Thoughts
+## 🧪 Testing These Components
 
-Combine was powerful, but it’s time to move on.
+You can easily test these tools using `XCTestExpectation` or dependency injection.
 
-Swift Concurrency brings clarity, safety, and a sense of ownership back to async code. It removes the need for a mental gymnastics course every time you want to do something simple like debounce user input or merge network requests.
+For example, you can mock an `AsyncSequence` to simulate input for a ViewModel:
 
-I’ve moved almost all my production code to Swift Concurrency—and I haven’t looked back.
+```swift
+struct MockInputSequence: AsyncSequence {
+    typealias Element = String
 
-Next up: how to build reusable `AsyncStream` utilities, structure `Actors` for async-safe state, and use `@Observable` for clean MVVM in SwiftUI.
+    let values: [String]
 
-Until then—refactor one Combine pipeline. Just one.  
-You'll feel the difference immediately.
+    struct Iterator: AsyncIteratorProtocol {
+        var index = 0
+        let values: [String]
 
+        mutating func next() async -> String? {
+            guard index < values.count else { return nil }
+            defer { index += 1 }
+            return values[index]
+        }
+    }
+
+    func makeAsyncIterator() -> Iterator {
+        Iterator(values: values)
+    }
+}
+```
+
+Use this in unit tests to simulate user input or background events.
+
+---
+
+## 🧭 Final Thoughts
+
+Swift Concurrency is not just about replacing GCD. It’s about creating a fundamentally better model for expressing time-based, order-sensitive, and event-driven code.
+
+- Use `AsyncQueue` when you need guaranteed serial execution.
+- Reach for `AsyncStream` when bridging old APIs or dealing with events over time.
+- Build `AsyncSequence` types when you need full control over async iteration.
+
+When you embrace these tools, you’ll write code that’s not just cleaner—it’ll match the actual behavior and expectations of your apps. Fewer race conditions. No callbacks. Just clarity.
+
+Swift's concurrency model still has its quirks, but tools like these make asynchronous programming feel like a natural part of the language.
+
+Stay curious, and keep leveling up.
+
+---
