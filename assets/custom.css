@@ -8,7 +8,7 @@ hr {
   width: 100%;
   max-height: 400px;
   object-fit: cover;
-  object-position: top center;
+  object-position: center center;
   border-radius: 5px;
   margin-bottom: 20px;
   display: block;
@@ -16,9 +16,9 @@ hr {
 
 .post-list-image {
   width: 100%;
-  max-height: 400px;
+  max-height: 300px;
   object-fit: cover;
-  object-position: top center;
+  object-position: center center;
   border-radius: 5px;
   margin-bottom: 10px;
   display: block;
