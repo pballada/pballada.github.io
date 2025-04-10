@@ -3,7 +3,7 @@ layout: post
 title: "Advanced SwiftUI State Management Patterns"
 date: 2024-06-11
 categories: [SwiftUI, Architecture]
-header_image: /assets/images/swiftui.png
+header_image: /assets/images/swiftui.jpg
 tags: [Swift, State, Patterns]
 ---
 

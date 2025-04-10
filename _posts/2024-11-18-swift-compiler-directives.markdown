@@ -4,7 +4,7 @@ title: "Swift Compiler Directives: A Hidden Power"
 date: 2024-11-18 11:00:00 +0000
 categories: [Swift, iOS, Xcode, Compiler Directives]
 tags: [swift, compiler, directives, xcode, ios]
-header_image: /assets/images/swift.jpg
+header_image: /assets/images/atomic.jpg
 ---
 
 Happy December 20, 2024! In this post, we'll explore **Swift compiler directives**, sometimes referred to as Swift's "preprocessor commands." Swift doesn't use a traditional C-style preprocessor, but it does provide several **compiler-time directives** to conditionally compile code, show compile-time warnings/errors, check version availability, and more.

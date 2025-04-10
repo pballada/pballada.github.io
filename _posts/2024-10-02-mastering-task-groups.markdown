@@ -3,7 +3,7 @@ layout: post
 title: "Mastering Task Groups in Swift Concurrency"
 date: 2024-10-02
 categories: [Swift, Concurrency]
-header_image: /assets/images/concurrency.jpg
+header_image: /assets/images/group.jpg
 ---
 
 Swift’s concurrency model provides a set of tools for running tasks in parallel while keeping code clean and organized. One of the more powerful features of this model is **Task Groups**, which let you create and manage multiple concurrent tasks under a single structured context. In this article, we’ll dig deeper into Task Groups, demonstrate how to safely combine their results, and walk through a few practical examples.

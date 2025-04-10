@@ -3,7 +3,7 @@ layout: post
 title: "Measuring Performance Using XCTest"
 date: 2024-09-24
 categories: [Testing, Performance]
-header_image: /assets/images/coding.jpg
+header_image: /assets/images/performance.jpg
 ---
 
 When working on iOS applications, ensuring your app remains efficient and responsive is just as important as implementing new features. One of the most straightforward ways to keep an eye on performance is by leveraging Unit Tests. While these tests are typically focused on functionality, you can also write specialized tests to measure resource consumption and speed.
