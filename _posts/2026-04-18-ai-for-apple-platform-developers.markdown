@@ -3,7 +3,7 @@ layout: post
 title: "AI for Apple Platform Developers: The Shift from Assistant to Autonomous Teammate"
 date: 2026-04-18 11:20:00 +0000
 categories: [AI, Apple, iOSDevelopment]
-header_image: /assets/images/ai-autonomous-teammate.png
+header_image: /assets/images/ai-autonomous-teammate.jpg
 tags: [ai, apple, ios, claude, developer-tools, xcode]
 ---
 
