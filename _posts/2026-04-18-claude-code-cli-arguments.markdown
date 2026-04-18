@@ -3,7 +3,7 @@ layout: post
 title: "Claude Code CLI Arguments You Probably Aren’t Using Yet"
 date: 2026-04-18 09:30:00 +0000
 categories: [AI, CLI, DeveloperTools]
-header_image: /assets/images/debug.jpg
+header_image: /assets/images/claude-code-cli-arguments.jpg
 tags: [claude-code, cli, productivity, tooling, ai]
 ---
 
