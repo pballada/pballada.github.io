@@ -2,65 +2,62 @@
 layout: base
 ---
 
-<div class="home">
-  {%- if page.title -%}
-    <h1 class="page-heading">{{ page.title }}</h1>
-  {%- endif -%}
+{% assign posts = paginator.posts | default: site.posts %}
+{% assign featured_post = posts.first %}
 
-  {{ content }}
+<section class="home-hero shell shell-wide">
+  <div class="hero-copy">
+    <p class="eyebrow">Independent notes from the edge of product and engineering</p>
+    <h1 class="hero-title">A cleaner, sharper home for essays on Apple platforms, AI products, and developer craft.</h1>
+    <p class="hero-description">Long-form writing about building software with taste: from iOS and Swift to tooling, product strategy, and the changing shape of AI-native development.</p>
+  </div>
 
-
-  {% if site.paginate %}
-    {% assign posts = paginator.posts %}
-  {% else %}
-    {% assign posts = site.posts %}
+  {% if featured_post %}
+  <a class="featured-card" href="{{ featured_post.url | relative_url }}">
+    <div class="featured-card-media">
+      {% if featured_post.header_image %}
+      <img src="{{ featured_post.header_image | relative_url }}" alt="{{ featured_post.title | escape }}">
+      {% endif %}
+    </div>
+    <div class="featured-card-body">
+      <span class="featured-label">Latest essay</span>
+      <h2>{{ featured_post.title | escape }}</h2>
+      <p>{{ featured_post.excerpt | strip_html | strip_newlines | truncate: 170 }}</p>
+      <span class="featured-meta">{{ featured_post.date | date: "%B %-d, %Y" }}</span>
+    </div>
+  </a>
   {% endif %}
+</section>
 
+<section class="posts-section shell shell-wide">
+  <div class="section-heading-row">
+    <div>
+      <p class="section-kicker">Archive</p>
+      <h2 class="section-title">Recent writing</h2>
+    </div>
+  </div>
 
-  {%- if posts.size > 0 -%}
-    {%- if page.list_title -%}
-      <h2 class="post-list-heading">{{ page.list_title }}</h2>
-    {%- endif -%}
-    <ul class="post-list">
-      {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
-      {%- for post in posts -%}
-      <li>
-        <span class="post-meta">{{ post.date | date: date_format }}</span>
+  <div class="post-grid">
+    {% for post in posts offset:1 %}
+    <article class="post-card">
+      <a class="post-card-link" href="{{ post.url | relative_url }}">
         {% if post.header_image %}
-        <a href="{{ post.url | relative_url }}">
-          <img src="{{ post.header_image | relative_url }}" alt="{{ post.title }}" class="post-list-image">
-        </a>
+        <div class="post-card-media">
+          <img src="{{ post.header_image | relative_url }}" alt="{{ post.title | escape }}" class="post-list-image">
+        </div>
         {% endif %}
-        <h3>
-          <a class="post-link" href="{{ post.url | relative_url }}">
-            {{ post.title | escape }}
-          </a>
-        </h3>
-        {%- if site.show_excerpts -%}
-          {{ post.excerpt }}
-        {%- endif -%}
-      </li>
-      {%- endfor -%}
-    </ul>
-
-    {% if site.paginate %}
-      <div class="pager">
-        <ul class="pagination">
-        {%- if paginator.previous_page %}
-          <li><a href="{{ paginator.previous_page_path | relative_url }}" class="previous-page">{{ paginator.previous_page }}</a></li>
-        {%- else %}
-          <li><div class="pager-edge">•</div></li>
-        {%- endif %}
-          <li><div class="current-page">{{ paginator.page }}</div></li>
-        {%- if paginator.next_page %}
-          <li><a href="{{ paginator.next_page_path | relative_url }}" class="next-page">{{ paginator.next_page }}</a></li>
-        {%- else %}
-          <li><div class="pager-edge">•</div></li>
-        {%- endif %}
-        </ul>
-      </div>
-    {%- endif %}
-
-  {%- endif -%}
-
-</div>
+        <div class="post-card-body">
+          <div class="post-card-meta-row">
+            <span class="post-meta">{{ post.date | date: "%b %-d, %Y" }}</span>
+            {% if post.categories and post.categories.size > 0 %}
+            <span class="pill">{{ post.categories[0] }}</span>
+            {% endif %}
+          </div>
+          <h3 class="post-card-title">{{ post.title | escape }}</h3>
+          <p class="post-card-excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 165 }}</p>
+        </div>
+      </a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
