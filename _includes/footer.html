@@ -1,13 +1,26 @@
 <footer class="site-footer">
   <div class="shell shell-wide footer-grid">
-    <div>
+    <div class="footer-brand-block">
       <p class="footer-kicker">Pau Ballada</p>
-      <h2 class="footer-heading">Thoughtful writing about software, tools, AI, and Apple development.</h2>
+      <h2 class="footer-heading">Thoughtful writing about software, developer tools, AI products, and Apple platforms.</h2>
+      <p class="footer-description">Built for calm reading, strong ideas, and durable technical taste.</p>
     </div>
-    <div class="footer-links">
-      <a href="{{ '/' | relative_url }}">All posts</a>
-      <a href="https://github.com/{{ site.github_username | escape }}" target="_blank" rel="noreferrer">GitHub</a>
-      <a href="{{ '/feed.xml' | relative_url }}">RSS feed</a>
+
+    <div class="footer-links-group">
+      <span class="footer-label">Explore</span>
+      <div class="footer-links">
+        <a href="{{ '/' | relative_url }}">All posts</a>
+        <a href="{{ '/about/' | relative_url }}">About</a>
+        <a href="{{ '/feed.xml' | relative_url }}">RSS feed</a>
+      </div>
+    </div>
+
+    <div class="footer-links-group">
+      <span class="footer-label">Elsewhere</span>
+      <div class="footer-links">
+        <a href="https://github.com/{{ site.github_username | escape }}" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://www.pauballada.com" target="_blank" rel="noreferrer">pauballada.com</a>
+      </div>
     </div>
   </div>
 </footer>

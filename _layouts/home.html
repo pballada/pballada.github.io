@@ -15,6 +15,8 @@ layout: base
   {% if featured_post %}
   <a class="featured-card" href="{{ featured_post.url | relative_url }}">
     <div class="featured-card-media">
+      <span class="featured-glow featured-glow-a"></span>
+      <span class="featured-glow featured-glow-b"></span>
       {% if featured_post.header_image %}
       <img src="{{ featured_post.header_image | relative_url }}" alt="{{ featured_post.title | escape }}">
       {% endif %}

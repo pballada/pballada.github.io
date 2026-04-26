@@ -2,7 +2,7 @@
 layout: base
 ---
 <article class="post-article h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-  <header class="post-hero shell">
+  <header class="post-hero shell shell-wide">
     <div class="post-hero-copy">
       {% if page.categories and page.categories.size > 0 %}
       <p class="eyebrow">{{ page.categories | join: ' • ' }}</p>
@@ -31,7 +31,7 @@ layout: base
     {% endif %}
   </header>
 
-  <div class="post-body-wrap shell">
+  <div class="post-body-wrap shell shell-wide">
     <div class="post-body-grid">
       <div class="post-content e-content" itemprop="articleBody">
         {{ content }}
