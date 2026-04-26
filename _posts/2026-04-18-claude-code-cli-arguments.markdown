@@ -1,466 +1,515 @@
 ---
 layout: post
-title: "Claude Code CLI Arguments You Probably Aren’t Using Yet"
+title: "Claude Code CLI Flags That Actually Change the Workflow"
 date: 2026-04-18 09:30:00 +0000
 categories: [AI, CLI, DeveloperTools]
-header_image: /assets/images/claude-code-cli-arguments.jpg
+header_image: /assets/images/claude-code-cli-advanced-flags.jpg
 tags: [claude-code, cli, productivity, tooling, ai]
 ---
 
-Claude Code has grown a lot beyond the usual `claude`, `claude -p`, and `claude -c` workflows. If you only ever use the obvious flags, you are leaving a surprising amount of power on the table.
+Claude Code now has enough CLI surface area that a flat list of flags is not very useful anymore.
 
-This post focuses on the **newer, lesser-known, or easily overlooked Claude Code CLI arguments** that are actually useful in day-to-day work. I am intentionally skipping the basics and focusing on the ones that tend to unlock better automation, safer scripting, cleaner session management, and more advanced tooling setups.
+What matters is not memorizing every switch. What matters is knowing **which arguments actually change how you work**:
 
-> **Note:** Claude Code's official documentation explicitly states that `claude --help` does **not** list every available flag, so the docs are the better source of truth for discovery.
+- which ones make automation more reliable
+- which ones make sessions safer or more deterministic
+- which ones unlock custom agents and MCP workflows
+- which ones help you shape context instead of just throwing prompts at the tool
 
----
+This post skips the “here is every option” approach and focuses on the flags that feel most consequential in real usage.
 
-## Why These Flags Matter
-
-A lot of Claude Code usage falls into one of these buckets:
-
-- **Interactive coding sessions**
-- **Headless or scripted runs**
-- **CI/CD and automation**
-- **Multi-repo or multi-directory work**
-- **MCP, plugins, and advanced integrations**
-
-The flags below are especially useful when you move beyond casual terminal use and start treating Claude Code as part of your real tooling stack.
+If you are mostly using Claude Code as a basic interactive terminal assistant, several of these will genuinely change what you think the CLI is for.
 
 ---
 
-## 1. `--exclude-dynamic-system-prompt-sections`
+## 1. `--add-dir`: The Flag That Quietly Changes Scope
 
-This is one of the most interesting recent flags because it is not flashy, but it matters a lot for **prompt caching and reproducibility**.
+If you use Claude Code across multi-repo or split-directory setups, `--add-dir` is one of the most important arguments in the entire CLI.
 
 ### What it does
-It moves machine-specific context, such as:
-
-- working directory
-- environment info
-- memory paths
-- git status
-
-out of the system prompt and into the first user message.
+It grants tool access to additional directories beyond the current working directory.
 
 ### Why it matters
-If you run the same scripted Claude task across:
+A lot of real work spans more than one folder:
 
-- different machines
-- multiple developers
-- CI workers
-- ephemeral containers
+- app + backend
+- monorepo + design system package
+- primary repo + shared scripts
+- project directory + notes/docs/config repo
 
-this can improve **prompt-cache reuse** and reduce needless variation.
+Without `--add-dir`, the model may be working with an artificially narrow view of your system.
 
 ### Example
 ```bash
-claude -p --exclude-dynamic-system-prompt-sections "summarize the changes in this repo"
+claude --add-dir ../api ../shared-ui
 ```
 
 ### Best use case
-Use it for **repeatable print-mode automation** where consistency and cache efficiency matter more than convenience.
+Use it whenever the task crosses repository or folder boundaries and you want that extra context to be explicit instead of accidental.
 
 ---
 
-## 2. `--replay-user-messages`
+## 2. `--bare`: The Best Way to Make Sessions Predictable
 
-This one is easy to miss, and it is especially useful if you are building wrappers around Claude Code.
-
-### What it does
-When using streamed JSON input and output, it re-emits user messages from stdin back to stdout as acknowledgments.
-
-### Why it matters
-This is handy when you are:
-
-- building an event-driven wrapper around Claude Code
-- integrating Claude Code with another process
-- writing tooling that needs to correlate requests and responses cleanly
-
-### Example
-```bash
-claude -p \
-  --input-format stream-json \
-  --output-format stream-json \
-  --replay-user-messages
-```
-
-### Best use case
-Use it in **SDK-style orchestration** or when piping structured events through multiple processes.
-
----
-
-## 3. `--strict-mcp-config`
-
-If you use MCP seriously, this flag deserves a place in your muscle memory.
+`--bare` is one of the strongest “serious workflow” flags in the CLI.
 
 ### What it does
-It tells Claude Code to use **only** the MCP servers provided via `--mcp-config`, ignoring other MCP configuration sources.
-
-### Why it matters
-Without this, local or inherited MCP config can affect behavior in subtle ways. That is annoying in automation and potentially risky in shared environments.
-
-### Example
-```bash
-claude --strict-mcp-config --mcp-config ./mcp.json
-```
-
-### Best use case
-Use it for:
-
-- CI jobs
-- demos
-- reproducible environments
-- security-conscious setups
-
-If you want deterministic MCP behavior, this is the flag.
-
----
-
-## 4. `--bare`
-
-This one is great when you want Claude Code to start fast and act more like a minimal execution engine.
-
-### What it does
-It skips auto-discovery of:
+It starts Claude Code in minimal mode and skips a long list of automatic environment behaviors, including:
 
 - hooks
-- skills
-- plugins
-- MCP servers
-- auto memory
-- `CLAUDE.md`
+- LSP
+- plugin sync
+- attribution
+- auto-memory
+- background prefetches
+- keychain reads
+- `CLAUDE.md` auto-discovery
 
 ### Why it matters
-Sometimes you do **not** want the full local environment loaded. In scripts, that extra discovery can add latency and unpredictability.
+This gives you a much cleaner, more deterministic starting point.
 
-### Example
-```bash
-claude --bare -p "list the risky parts of this diff"
-```
+That is extremely useful for:
 
-### Best use case
-Perfect for:
+- debugging weird environment behavior
+- benchmarking tasks
+- hermetic-ish automation
+- making a scripted run behave the same way every time
 
-- automation
-- benchmark experiments
-- hermetic-ish scripting
-- debugging whether local configuration is influencing results
+### Why it is more important than it looks
+A lot of advanced frustration with tools like Claude Code is not “the model was bad.” It is “the environment was different than I thought.”
 
----
-
-## 5. `--fallback-model`
-
-This is one of the most practical headless flags for reliability.
-
-### What it does
-In print mode, Claude Code can automatically fall back to another model if the default model is overloaded.
-
-### Example
-```bash
-claude -p --fallback-model sonnet "generate a changelog from these commits"
-```
-
-### Why it matters
-If you run Claude Code in scripts, CI, or internal tools, transient model availability issues are painful. A fallback model can turn a failed run into a degraded-but-successful one.
-
-### Best use case
-Use it in:
-
-- CI pipelines
-- cron jobs
-- internal developer tooling
-- any automation where “some answer” is better than “job failed”
+`--bare` is one of the clearest ways to reduce that problem.
 
 ---
 
-## 6. `--max-budget-usd`
+## 3. `--agent` and `--agents`: Where the CLI Starts Feeling Like a Platform
 
-A small flag with very real operational value.
-
-### What it does
-Sets a hard spending cap for API calls in print mode.
-
-### Example
-```bash
-claude -p --max-budget-usd 2.50 "review this repository for likely dead code"
-```
-
-### Why it matters
-This is a strong safety rail for:
-
-- experiments
-- batch jobs
-- junior team members trying automation
-- any workflow where token costs could unexpectedly balloon
-
-### Best use case
-If you are turning Claude Code into infrastructure, cost guardrails stop being optional.
-
----
-
-## 7. `--fork-session`
-
-This is a quiet but elegant session-management flag.
-
-### What it does
-When resuming with `--resume` or `--continue`, it creates a **new session ID** instead of continuing to append to the original.
-
-### Example
-```bash
-claude --resume auth-refactor --fork-session
-```
-
-### Why it matters
-Sometimes you want the context of an existing conversation without mutating its history. This gives you a branch-like workflow.
-
-### Best use case
-Great for:
-
-- trying alternate approaches
-- preserving a “golden” session
-- debugging a task from a known checkpoint
-
----
-
-## 8. `--from-pr`
-
-This one is a strong signal that Claude Code is becoming more PR-native.
-
-### What it does
-Resumes sessions linked to a specific GitHub pull request, using either a PR number or URL.
-
-### Example
-```bash
-claude --from-pr 123
-```
-
-### Why it matters
-If your workflow already lives in GitHub, this reduces friction between coding sessions and review context.
-
-### Best use case
-Useful when:
-
-- reviewing a PR over multiple sittings
-- resuming an AI-assisted review flow
-- handing off work tied to a specific pull request
-
----
-
-## 9. `--remote`, `--teleport`, and `--remote-control`
-
-These are not exactly hidden, but many developers still have not built them into their workflow.
-
-### Why they are interesting
-Together, these flags point to a bigger shift: Claude Code is no longer just a local terminal assistant.
-
-- `--remote` creates a web session on Claude.ai with the provided task.
-- `--teleport` resumes a web session locally.
-- `--remote-control` enables a session you can also control from Claude.ai or the Claude app.
-
-### Example
-```bash
-claude --remote "Investigate why this build fails on CI"
-```
-
-### Best use case
-These are powerful if you move between:
-
-- desktop and browser
-- laptop and remote machine
-- solo work and collaborative debugging
-
-I would call this set **underused rather than unknown**.
-
----
-
-## 10. `--channels` and `--dangerously-load-development-channels`
-
-These feel like early glimpses of where Claude Code is headed.
+These flags are easy to underestimate.
 
 ### What they do
-- `--channels` lets Claude listen for MCP server channel notifications in a session.
-- `--dangerously-load-development-channels` allows non-approved channels for local development.
+- `--agent` selects the current agent for the session.
+- `--agents` lets you define custom agents via JSON.
 
 ### Why they matter
-This shifts Claude from a purely request-response tool into something more event-aware.
+This turns the CLI from a single general-purpose tool into something more role-aware.
 
-### Best use case
-These are especially relevant if you are experimenting with:
+You can define temporary specialists for a session, such as:
 
-- alerts
-- webhooks
-- event-driven development workflows
-- custom integrations during local development
-
-Because this area is still evolving, I would treat these as advanced and somewhat exploratory.
-
----
-
-## 11. `--tmux` with `--worktree`
-
-This pair is fascinating if you like isolation and parallelism.
-
-### What it does
-`--worktree` starts Claude in an isolated git worktree. `--tmux` creates a tmux session for that worktree.
-
-### Example
-```bash
-claude -w feature-auth --tmux
-```
-
-### Why it matters
-This is a serious quality-of-life improvement for developers juggling:
-
-- multiple branches
-- parallel investigations
-- larger refactors
-- agent-team workflows
-
-### Best use case
-If you often think, “I wish this experiment lived in its own branch and pane,” this is the answer.
-
----
-
-## 12. `--allowedTools`, `--disallowedTools`, and `--tools`
-
-These are easy to underestimate.
-
-### Why they matter
-These flags let you shape Claude Code’s tool surface in three distinct ways:
-
-- `--allowedTools`: allow some tools without prompting
-- `--disallowedTools`: completely remove specific tools
-- `--tools`: restrict the built-in tool set
-
-### Example
-```bash
-claude --tools "Bash,Read" --disallowedTools "Edit"
-```
-
-### Best use case
-Excellent for:
-
-- demos
-- safer sandboxed sessions
-- read-only audits
-- controlling automation behavior in scripts
-
-This is also one of the better ways to make sessions more predictable.
-
----
-
-## 13. `--include-hook-events` and `--include-partial-messages`
-
-These are very much “power user” flags.
-
-### What they do
-They enrich streamed output with:
-
-- hook lifecycle events
-- partial model messages
-
-### Why they matter
-If you are building observability or custom tooling around Claude Code, these flags make the output stream dramatically more informative.
-
-### Example
-```bash
-claude -p \
-  --output-format stream-json \
-  --include-hook-events \
-  --include-partial-messages \
-  "analyze this repository"
-```
-
-### Best use case
-Use them when building:
-
-- dashboards
-- wrappers
-- custom UIs
-- debugging tools for Claude-driven workflows
-
----
-
-## 14. `--agent` and `--agents`
-
-These are powerful, and still not widely discussed.
-
-### What they do
-- `--agent` selects an agent for the session.
-- `--agents` defines custom subagents dynamically via JSON.
-
-### Why they matter
-This opens the door to more specialized, role-based workflows without baking everything into static config.
+- reviewer
+- architect
+- test-writer
+- docs editor
+- bug triager
 
 ### Example
 ```bash
 claude --agents '{
   "reviewer": {
     "description": "Reviews risky changes",
-    "prompt": "Focus on bugs, regressions, and edge cases"
+    "prompt": "Focus on regressions, edge cases, and missing tests"
   }
-}'
+}' --agent reviewer
+```
+
+### Best use case
+This is especially powerful for:
+
+- repeatable team workflows
+- temporary specialization
+- local experiments with agent roles
+- reducing prompt repetition for recurring tasks
+
+This pair feels like one of the most future-facing parts of the CLI.
+
+---
+
+## 4. `--mcp-config` and `--strict-mcp-config`: The Deterministic MCP Combo
+
+If you use MCP seriously, these are foundational.
+
+### What they do
+- `--mcp-config` loads MCP servers from JSON files or JSON strings.
+- `--strict-mcp-config` tells Claude Code to use **only** those MCP servers, ignoring all other MCP configurations.
+
+### Why they matter
+MCP is powerful, but power without boundaries gets messy fast.
+
+If you care about reproducibility, demos, or CI-like reliability, you do not want hidden local MCP configuration affecting the run.
+
+### Example
+```bash
+claude \
+  --mcp-config ./mcp.json \
+  --strict-mcp-config
+```
+
+### Best use case
+Use this pair when you need:
+
+- deterministic tool availability
+- a controlled integration surface
+- cleaner team handoff
+- safer automation environments
+
+This is one of the clearest examples of the CLI maturing from “smart terminal helper” into “controllable engineering runtime.”
+
+---
+
+## 5. `--print`, `--input-format`, and `--output-format`: The Automation Core
+
+These flags are where Claude Code stops looking like an interactive assistant and starts looking like infrastructure.
+
+### What they do
+- `--print` runs headlessly and exits
+- `--input-format` controls how input is supplied
+- `--output-format` controls how output is returned
+
+Relevant formats include:
+
+- `text`
+- `json`
+- `stream-json`
+
+### Why they matter
+If you want to wire Claude Code into scripts, wrappers, or internal tools, this is the center of gravity.
+
+### Examples
+Simple print mode:
+```bash
+claude -p "summarize the risk in this diff"
+```
+
+Structured output:
+```bash
+claude -p --output-format json "extract the key action items"
+```
+
+Streaming orchestration:
+```bash
+claude -p \
+  --input-format stream-json \
+  --output-format stream-json
+```
+
+### Best use case
+Use these for:
+
+- shell scripts
+- CI helpers
+- editor integrations
+- dashboards
+- internal developer tooling
+
+This trio is one of the biggest separators between casual CLI use and real systems use.
+
+---
+
+## 6. `--json-schema`: The Flag That Makes Output Less Wishful
+
+If you automate Claude Code and still rely on “please return valid JSON,” you are living dangerously.
+
+### What it does
+It validates structured output against a JSON schema.
+
+### Why it matters
+This gives you stronger guarantees for downstream consumers:
+
+- scripts
+- APIs
+- dashboards
+- pipelines
+- bots
+
+### Example
+```bash
+claude -p \
+  --output-format json \
+  --json-schema '{
+    "type": "object",
+    "properties": {
+      "title": {"type": "string"},
+      "risk": {"type": "string"}
+    },
+    "required": ["title", "risk"]
+  }' \
+  "Analyze this PR"
+```
+
+### Best use case
+This is one of the highest-value flags for anyone building reliable automation around the CLI.
+
+---
+
+## 7. `--max-budget-usd`: A Tiny Flag with Real Operational Value
+
+This is not the most glamorous flag, but it is one of the most practical.
+
+### What it does
+It sets a hard maximum dollar budget for API calls in print mode.
+
+### Why it matters
+Once Claude Code starts moving into scripts and recurring workflows, cost control stops being optional.
+
+### Example
+```bash
+claude -p --max-budget-usd 2.00 "review this repository for dead code"
+```
+
+### Best use case
+Use it when:
+
+- experimenting with large prompts
+- running background jobs
+- giving teammates safer defaults
+- building internal tooling with bounded cost
+
+This is the kind of flag that becomes more important the more successful your automation becomes.
+
+---
+
+## 8. `--permission-mode`, `--allowedTools`, `--disallowedTools`, and `--tools`
+
+This is the cluster that defines how much power Claude actually has during a session.
+
+### Why this matters so much
+A lot of Claude Code workflow design is really **permission design**.
+
+You are not only deciding what task to run. You are deciding:
+
+- how interactive the session should be
+- what tools are available
+- what tools are silently allowed
+- what tools are completely off-limits
+
+### Useful pieces
+- `--permission-mode`: sets the overall permission strategy
+- `--allowedTools`: explicitly allow certain tools
+- `--disallowedTools`: explicitly deny certain tools
+- `--tools`: restrict the built-in tool set itself
+
+### Example
+```bash
+claude \
+  --permission-mode plan \
+  --tools "Read,Bash" \
+  --disallowedTools "Edit"
+```
+
+### Best use case
+This cluster is excellent for:
+
+- safer audits
+- read-only investigations
+- demos
+- tightly controlled automation
+- giving a session exactly the amount of power it needs—and no more
+
+---
+
+## 9. `--dangerously-skip-permissions` and `--allow-dangerously-skip-permissions`
+
+These flags deserve blunt language.
+
+### What they do
+They allow bypassing normal permission checks.
+
+### Why they matter
+Not because they are broadly useful, but because they are **high consequence**.
+
+There are real situations where you want this:
+
+- isolated sandboxes
+- throwaway automation environments
+- trusted no-internet containers
+- very specific internal workflows
+
+But outside those contexts, these flags can remove the safety rails that stop small mistakes from becoming expensive ones.
+
+### Best use case
+Use them only where the environment itself is the safety boundary.
+
+That is the right mental model.
+
+---
+
+## 10. `--system-prompt` and `--append-system-prompt`
+
+These flags are more important than they seem because they let you control not just the task, but the **operating frame** around the task.
+
+### What they do
+- `--system-prompt` replaces the system prompt
+- `--append-system-prompt` adds guidance to the default system prompt
+
+### Why they matter
+This is one of the cleanest ways to steer:
+
+- tone
+- risk posture
+- review criteria
+- team conventions
+- output discipline
+
+### Example
+```bash
+claude \
+  --append-system-prompt "Be conservative. Prefer review comments over code edits." \
+  "review this PR"
 ```
 
 ### Best use case
 Great for:
 
-- temporary role specialization
-- experiments with subagent patterns
-- session-local customization without changing shared config
+- team norms
+- one-off strict review modes
+- output shaping in automation
+- temporary session-specific behavior without changing shared config
 
 ---
 
-## 15. A Small Flag That Tells a Bigger Story: `--enable-auto-mode`
+## 11. `--resume`, `--continue`, `--fork-session`, and `--session-id`
 
-This one is interesting because it is now effectively a historical footnote.
+This group matters if you treat Claude Code conversations as real working sessions rather than disposable chats.
 
-### Current status
-The docs note that `--enable-auto-mode` was **removed in v2.1.111**, because auto mode is now included in the Shift+Tab cycle by default. The new recommendation is:
+### Why they matter
+These flags help with continuity and branching:
 
+- `--resume`: jump back into a specific session
+- `--continue`: resume the most recent conversation in the current directory
+- `--fork-session`: resume while creating a new session ID instead of mutating the old one
+- `--session-id`: pin the conversation to a specific UUID
+
+### Best use case
+This is especially useful when you want to:
+
+- preserve a “golden” investigative thread
+- branch from an earlier checkpoint
+- keep alternate approaches separate
+- build more deliberate long-running workflows
+
+This cluster is underrated because it changes the ergonomics of multi-step work dramatically.
+
+---
+
+## 12. `--worktree` and `--tmux`: Serious Parallelism for Real Repos
+
+These two flags are some of the most exciting for heavier engineering workflows.
+
+### What they do
+- `--worktree` creates a new git worktree for the session
+- `--tmux` creates a tmux session for that worktree
+
+### Why they matter
+This is where Claude Code starts fitting into real parallel development patterns:
+
+- isolated experiments
+- branch-specific investigation
+- multiple tasks in motion at once
+- cleaner context separation
+
+### Example
 ```bash
-claude --permission-mode auto
+claude --worktree feature-auth --tmux
 ```
 
-### Why mention a removed flag?
-Because it tells us something important: Claude Code is evolving quickly, and some blog posts or gists go stale fast.
-
-If you are writing automation or internal docs, check the **current official reference** rather than trusting an old snippet.
+### Best use case
+If you often split your attention across refactors, reviews, and investigations, this pair is much more meaningful than a generic “open a new terminal” workflow.
 
 ---
 
-## My Shortlist: The Most Useful “Unknown” Flags
+## 13. `--plugin-dir` and `--settings`
 
-If I had to pick the flags most developers should learn next, it would be these:
+These are not the flashiest flags, but they are deeply useful for shaping one session without changing everything globally.
 
-1. `--bare`
-2. `--strict-mcp-config`
-3. `--exclude-dynamic-system-prompt-sections`
-4. `--fallback-model`
-5. `--max-budget-usd`
-6. `--fork-session`
-7. `--replay-user-messages`
+### What they do
+- `--plugin-dir` loads plugins from a directory for that session only
+- `--settings` loads extra settings from a JSON file or JSON string
 
-That group covers the biggest practical gains in:
+### Why they matter
+Session-local customization is a huge quality-of-life improvement.
 
-- reproducibility
-- reliability
+You can experiment without contaminating your normal setup.
+
+### Best use case
+Use them for:
+
+- experiments
+- demos
+- project-specific overrides
+- temporary local tooling
+
+This is another sign that Claude Code is evolving toward a more composable runtime.
+
+---
+
+## 14. `--include-partial-messages` and `--replay-user-messages`
+
+These are power-user flags, but they matter a lot if you care about observability and wrappers.
+
+### What they do
+- `--include-partial-messages` exposes partial chunks as they arrive
+- `--replay-user-messages` re-emits stdin user messages on stdout for acknowledgment in streaming JSON flows
+
+### Why they matter
+These are not “better writing” flags. They are **better integration** flags.
+
+They make it easier to build:
+
+- custom frontends
+- event-driven wrappers
+- streaming dashboards
+- multi-process orchestration
+
+### Best use case
+If you are using Claude Code as a component inside a larger system, these become much more interesting than they look in the help text.
+
+---
+
+## 15. My Shortlist: The Flags Worth Learning First
+
+If I had to give one focused shortlist from all of this, it would be:
+
+1. `--add-dir`
+2. `--bare`
+3. `--agent` / `--agents`
+4. `--mcp-config` + `--strict-mcp-config`
+5. `--print` + `--output-format` + `--input-format`
+6. `--json-schema`
+7. `--max-budget-usd`
+8. `--permission-mode` + tool restriction flags
+9. `--fork-session`
+10. `--worktree` + `--tmux`
+
+That set covers the biggest jumps in:
+
+- determinism
+- orchestration
+- safety
 - cost control
-- safe automation
-- advanced orchestration
+- multi-session workflow design
 
 ---
 
 ## Final Thoughts
 
-Claude Code CLI has quietly become much richer than many developers realize. The most useful advanced flags are not necessarily the flashy ones. They are the ones that make the tool:
+The most interesting Claude Code CLI flags are no longer just convenience options.
 
-- more reproducible
-- more scriptable
-- safer in automation
-- easier to integrate into real engineering workflows
+They define:
 
-If you only try three after reading this, I would start with `--bare`, `--strict-mcp-config`, and `--exclude-dynamic-system-prompt-sections`.
+- how much context Claude can access
+- how deterministic a run is
+- how much power the session has
+- whether the CLI behaves like a chat tool or an automation runtime
+- whether your workflow is disposable or structured
 
-Those three alone change how “serious” Claude Code feels in a production-grade developer setup.
+That is why the best flags are not just “nice to know.” They change the shape of the work.
+
+If you only try a few after reading this, start with:
+
+- `--add-dir`
+- `--bare`
+- `--strict-mcp-config`
+- `--json-schema`
+- `--permission-mode`
+- `--worktree`
+
+Those are the ones that most clearly push Claude Code from “helpful terminal assistant” toward “serious tool in the engineering stack.”
