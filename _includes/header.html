@@ -1,12 +1,15 @@
 <header class="site-header" role="banner">
   <div class="shell shell-wide site-header-inner">
-    <a class="brand" rel="author" href="{{ '/' | relative_url }}">
-      <span class="brand-mark">{{ site.short_title | default: 'PB' }}</span>
-      <span class="brand-copy">
+    <div class="brand-lockup">
+      <a class="brand-mark-link" rel="author" href="{{ '/' | relative_url }}" aria-label="{{ site.title | escape }} home">
+        <span class="brand-mark">{{ site.short_title | default: 'PB' }}</span>
+      </a>
+
+      <a class="brand-title-link" rel="author" href="{{ '/' | relative_url }}">
         <span class="brand-name">{{ site.title | escape }}</span>
         <span class="brand-tagline">{{ site.description | escape }}</span>
-      </span>
-    </a>
+      </a>
+    </div>
 
     <nav class="site-nav" aria-label="Primary">
       <a class="nav-link" href="{{ '/' | relative_url }}">Writing</a>
