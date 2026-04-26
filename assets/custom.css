@@ -504,6 +504,9 @@ body.site-shell::selection {
 
 .post-article .post-content,
 .page-content-prose {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   padding: 2.5rem 2.6rem;
   border-radius: 32px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.03));
@@ -627,7 +630,9 @@ body.site-shell::selection {
 .post-article pre,
 .page-content-prose pre {
   position: relative;
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin: 1.8rem 0;
   padding: 2.25rem 1.35rem 1.3rem;
   border-radius: 22px;
@@ -654,6 +659,7 @@ body.site-shell::selection {
 .post-article pre code,
 .page-content-prose pre code {
   display: block;
+  min-width: max-content;
   background: transparent;
   border: 0;
   padding: 0;
