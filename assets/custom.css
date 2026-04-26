@@ -108,7 +108,7 @@ body.site-shell::selection {
 
 .site-header-inner {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
   padding: 1rem 0;
@@ -164,9 +164,9 @@ body.site-shell::selection {
   top: auto !important;
   margin-left: auto;
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
-  align-self: flex-start;
+  align-self: center;
   gap: 1.15rem;
   flex-wrap: wrap;
   padding: 0 !important;
@@ -883,7 +883,8 @@ th {
     width: auto;
     justify-content: flex-end;
     justify-self: end;
-    align-self: start;
+    align-self: center;
+    align-items: center;
     gap: 1rem;
     padding: 0 !important;
     border: 0 !important;
