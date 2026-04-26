@@ -162,6 +162,7 @@ body.site-shell::selection {
   position: static !important;
   right: auto !important;
   top: auto !important;
+  margin-left: auto;
   display: inline-flex;
   align-items: flex-start;
   justify-content: flex-end;
@@ -171,6 +172,7 @@ body.site-shell::selection {
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
+  text-align: right;
 }
 
 .site-nav label,
@@ -877,15 +879,17 @@ th {
     position: static !important;
     right: auto !important;
     top: auto !important;
+    margin-left: auto;
     display: flex !important;
     width: 100%;
-    justify-content: flex-start;
+    justify-content: flex-end;
     gap: 1rem;
     padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
     flex-wrap: wrap;
+    text-align: right;
   }
 
   .nav-link {
@@ -956,6 +960,7 @@ th {
 
 @media (max-width: 520px) {
   .site-nav {
+    justify-content: flex-end;
     gap: 0.8rem 1rem;
   }
 
