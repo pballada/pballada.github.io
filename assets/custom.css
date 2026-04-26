@@ -108,7 +108,7 @@ body.site-shell::selection {
 
 .site-header-inner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1.5rem;
   padding: 1rem 0;
@@ -163,7 +163,9 @@ body.site-shell::selection {
   right: auto !important;
   top: auto !important;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: flex-end;
+  align-self: flex-start;
   gap: 1.15rem;
   flex-wrap: wrap;
   padding: 0 !important;
