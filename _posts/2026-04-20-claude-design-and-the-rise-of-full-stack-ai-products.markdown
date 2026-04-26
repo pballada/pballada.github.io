@@ -4,7 +4,7 @@ title: "Claude Design and the Rise of Full-Stack AI Products"
 date: 2026-04-20 09:00:00 +0000
 categories: [AI, ProductStrategy, DeveloperTools]
 tags: [ai, anthropic, claude, design, figma, product-strategy]
-header_image: /assets/images/atomic.jpg
+header_image: /assets/images/claude-design-full-stack-ai-products.jpg
 ---
 
 For most of the generative AI boom, the central question was straightforward.
