@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Claude + Git Worktrees: The Cleanest Workflow for Parallel AI Coding"
+title: "Claude + Git Worktrees: A Practical Workflow for Better AI Productivity"
 date: 2026-05-11 09:00:00 +0000
 categories: [AI, DeveloperTools, Git]
 header_image: /assets/images/claude-code-cli-advanced-flags.jpg
@@ -25,7 +25,22 @@ Maybe you simply want to avoid the classic AI-coding failure mode: **too much co
 
 That is where **git worktrees** become one of the most useful tools in the modern AI workflow.
 
-If you use Claude or Claude Code regularly, worktrees give you a much cleaner operating model:
+And the real benefit is not just technical neatness.
+
+It is **productivity**.
+
+If you use Claude or Claude Code regularly, worktrees help you:
+
+- switch tasks faster
+- reduce prompt overhead
+- keep AI context cleaner
+- avoid branch thrash
+- recover focus more easily
+- ship smaller and better PRs
+
+That is why I think worktrees are one of the highest-leverage upgrades for practical AI-assisted development.
+
+They give you a much cleaner operating model:
 
 - one task per directory
 - one branch per task
@@ -105,6 +120,10 @@ That is the whole magic.
 
 This is the workflow I think works best in practice.
 
+It is optimized for one thing above all:
+
+> **spending less time managing git state and more time getting useful work out of Claude**
+
 ### 1. Keep one stable main repo
 
 Use your normal repo directory as the home base.
@@ -155,6 +174,11 @@ Then give it a task that matches the isolated branch:
 - write the post draft for this feature
 
 That isolation matters more than most people think.
+
+It improves productivity in two ways at once:
+
+- Claude sees a cleaner local state
+- you do not waste time re-explaining unrelated work
 
 ### 4. Keep one task, one branch, one conversation
 
@@ -220,6 +244,8 @@ That output is also easier to parse in scripts.
 
 This is one of the most underrated benefits.
 
+For me, this is where worktrees stop being a git trick and start becoming a real productivity system.
+
 When you return to a task later, you do not need to reconstruct your state from memory.
 
 You just re-enter the directory.
@@ -251,10 +277,89 @@ For each worktree, keep a short local note like:
 - what Claude already changed
 - what is left
 - what should *not* be touched
+- what command or test proves the work is done
 
 For example, a simple `WORKTREE.md` or `NOTES.md` inside the branch can help a lot.
 
+A tiny template is enough:
+
+```markdown
+# Worktree note
+
+Task: Fix auth redirect bug
+Status: In progress
+Done:
+- login form validation adjusted
+- redirect logic moved to shared helper
+
+Next:
+- test expired session flow
+- update regression test
+
+Do not touch:
+- signup flow
+- analytics events
+
+Done when:
+- existing auth tests pass
+- manual login/logout flow works
+```
+
 That turns “resume work” from a memory exercise into a clean handoff back to yourself or back to Claude.
+
+---
+
+## A Very Practical Daily Workflow
+
+If you want the shortest version, this is the routine I would recommend.
+
+### Morning
+
+Pick the 1–3 real tasks that matter.
+
+Create one worktree per task:
+
+```bash
+git worktree add ../repo-feature-a -b feature-a origin/main
+git worktree add ../repo-docs-update -b docs-update origin/main
+```
+
+Open Claude in the one you want to attack first.
+
+### During the day
+
+Stay disciplined:
+
+- one worktree per task
+- one clear goal per Claude session
+- commit in small chunks
+- do not mix emergency fixes into the same branch
+
+If something urgent appears, create a fresh hotfix worktree instead of polluting the current one.
+
+### End of session
+
+Before leaving a task:
+
+- run `git status`
+- commit what is ready
+- leave a short note about what is next
+- close the terminal or Claude session
+
+This makes the next session dramatically easier to resume.
+
+### After merge
+
+Clean it up immediately:
+
+```bash
+git worktree remove ../repo-feature-a
+git branch -d feature-a
+git push origin --delete feature-a
+git worktree prune
+```
+
+That habit keeps the whole system fast and low-friction.
 
 ---
 
@@ -334,6 +439,62 @@ That gives you a full lifecycle:
 - prune
 
 Simple. Clean. Repeatable.
+
+---
+
+## Small Productivity Tricks That Compound
+
+There are a few simple habits that make this even better.
+
+### Use short branch names with obvious purpose
+
+You should know what a branch is for just by reading it.
+
+### Keep worktrees in one predictable folder
+
+For example:
+
+```bash
+~/worktrees/project-name-feature-x
+```
+
+or:
+
+```bash
+../repo-feature-x
+```
+
+What matters is consistency.
+
+### Add shell aliases for the repetitive parts
+
+For example:
+
+```bash
+alias gwt='git worktree'
+alias gwtls='git worktree list'
+```
+
+Or even a helper function:
+
+```bash
+wtnew () {
+  git fetch origin && git worktree add ../$1 -b $1 origin/main
+}
+```
+
+That turns worktree creation into something you actually use instead of something you postpone.
+
+### Use worktrees for thinking, not just coding
+
+Claude is also useful for:
+
+- drafting docs
+- writing migration notes
+- preparing release summaries
+- exploring refactor plans
+
+Those tasks also benefit from isolation.
 
 ---
 
@@ -451,6 +612,8 @@ If you are doing serious development with Claude, worktrees are not just a neat 
 
 They are a better mental model.
 
+And more importantly, they are a better **productivity loop**.
+
 One task.
 One directory.
 One branch.
@@ -469,6 +632,8 @@ Prune the leftovers.
 It is simple, but it removes a surprising amount of friction.
 
 And in AI-assisted coding, less friction usually means better results.
+
+If Claude is already part of how you work, worktrees are one of the easiest ways to make that workflow calmer, faster, and more reliable.
 
 ---
 
